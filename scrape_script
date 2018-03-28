@@ -24,7 +24,7 @@ nl <- list()
           html_table()   %>% # select the desired table
         bind_rows()
         #df1 <- do.call(rbind.data.frame, al)
-        al <- al %>% mutate(lgID = 'AL')
+        al <- al %>% mutate(lgID = 'AL', year = as.numeric(gsub("[^\\d]+", "", url, perl=TRUE)))
         df1 <- rbind(df1, al)
         
       
@@ -36,8 +36,8 @@ nl <- list()
           html_nodes('table#NL_CYA_voting') %>% # reparse to HTML
           html_table()  %>%
           bind_rows()          # select the desired table  
-        nl <- nl %>% mutate(lgID = 'NL')
-        df2 <- rbind(df1, nl)
+        nl <- nl %>% mutate(lgID = 'NL', year = as.numeric(gsub("[^\\d]+", "", url, perl=TRUE)))
+        df2 <- rbind(df2, nl)
         
         df <- rbind(df1, df2) 
        
@@ -57,4 +57,4 @@ df <- df %>% rename(rank = Rank, name = Name, teamID = Tm, vote_pts = `Vote Pts`
 #factor some columns
 df$lgID <-as.factor(df$lgID)
 df$rank <-as.factor(df$rank)
-
+df$year <-as.factor(df$year)
