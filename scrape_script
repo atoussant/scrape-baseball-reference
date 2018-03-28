@@ -1,0 +1,60 @@
+library(rvest)
+library(htmlTable)
+library(tidyverse)
+
+url_base <- 'https://www.baseball-reference.com/awards/awards_'
+years = 2015:2017
+urls <- paste0(url_base, years, '.shtml') 
+df1 <- data.frame()
+al <- list()
+df2 <- data.frame()
+nl <- list()
+
+      for(url in urls){
+        
+       print(url) 
+       webpage <- read_html(url)
+        
+        
+        al <- webpage %>% html_nodes(xpath = '//comment()') %>%    # select comment nodes
+          html_text() %>%    # extract comment text
+          paste(collapse = '') %>%    # collapse to a single string
+          read_html() %>%
+          html_nodes('table#AL_CYA_voting') %>% # reparse to HTML
+          html_table()   %>% # select the desired table
+        bind_rows()
+        #df1 <- do.call(rbind.data.frame, al)
+        al <- al %>% mutate(lgID = 'AL')
+        df1 <- rbind(df1, al)
+        
+      
+        
+        nl <- webpage %>% html_nodes(xpath = '//comment()') %>%    # select comment nodes
+          html_text() %>%    # extract comment text
+          paste(collapse = '') %>%    # collapse to a single string
+          read_html() %>%
+          html_nodes('table#NL_CYA_voting') %>% # reparse to HTML
+          html_table()  %>%
+          bind_rows()          # select the desired table  
+        nl <- nl %>% mutate(lgID = 'NL')
+        df2 <- rbind(df1, nl)
+        
+        df <- rbind(df1, df2) 
+       
+       
+      }
+#remove unnecessary data frames
+rm(al)
+rm(nl)
+rm(df1)
+rm(df2)
+
+#change names of some columns
+
+df <- df %>% rename(rank = Rank, name = Name, teamID = Tm, vote_pts = `Vote Pts`, fst_place = `1st Place`, vote_share = Share,
+                    winpct = `W-L%`, ERAP = `ERA+`) %>% select(lgID, rank, name, teamID, everything())
+
+#factor some columns
+df$lgID <-as.factor(df$lgID)
+df$rank <-as.factor(df$rank)
+
